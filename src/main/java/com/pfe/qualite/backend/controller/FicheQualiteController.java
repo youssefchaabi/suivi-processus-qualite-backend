@@ -33,10 +33,11 @@ public class FicheQualiteController {
     @PostMapping
     public FicheQualite create(@RequestBody FicheQualite fiche) {
         fiche.setDateCreation(new Date());
+        fiche.setDateDerniereModification(new Date());
         return ficheRepository.save(fiche);
     }
 
-    // 🔹 PUT : modifier
+    // 🔹 PUT : modifier une fiche
     @PutMapping("/{id}")
     public FicheQualite update(@PathVariable String id, @RequestBody FicheQualite updated) {
         return ficheRepository.findById(id).map(fiche -> {
@@ -44,11 +45,14 @@ public class FicheQualiteController {
             fiche.setDescription(updated.getDescription());
             fiche.setTypeFiche(updated.getTypeFiche());
             fiche.setStatut(updated.getStatut());
+            fiche.setResponsable(updated.getResponsable());
+            fiche.setCommentaire(updated.getCommentaire());
+            fiche.setDateDerniereModification(new Date());
             return ficheRepository.save(fiche);
         }).orElseThrow(() -> new RuntimeException("Fiche non trouvée"));
     }
 
-    // 🔹 DELETE
+    // 🔹 DELETE : supprimer une fiche
     @DeleteMapping("/{id}")
     public void delete(@PathVariable String id) {
         ficheRepository.deleteById(id);

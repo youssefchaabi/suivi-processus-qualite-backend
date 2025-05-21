@@ -17,14 +17,16 @@ public class FicheQualite {
     private String id;
 
     private String titre;
-
     private String description;
 
-    private String typeFiche;  // ex : AUDIT, EVALUATION... (de nomenclature TYPE_FICHE)
+    private String typeFiche;
+    private String statut;
 
-    private String statut;     // ex : EN_COURS, VALIDEE (de nomenclature STATUT)
+    private String creePar;
+    private String responsable;
+
+    private String commentaire;
 
     private Date dateCreation;
-
-    private String creePar;    // id ou nom de l'utilisateur
+    private Date dateDerniereModification;
 }

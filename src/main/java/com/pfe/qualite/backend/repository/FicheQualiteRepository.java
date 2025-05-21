@@ -7,12 +7,8 @@ import java.util.List;
 
 public interface FicheQualiteRepository extends MongoRepository<FicheQualite, String> {
 
-    // Exemple de méthode personnalisée : retrouver les fiches par utilisateur
+    // ➕ méthodes utiles supplémentaires
     List<FicheQualite> findByCreePar(String creePar);
-
-    // Retrouver les fiches par type (audit, amélioration, etc.)
     List<FicheQualite> findByTypeFiche(String typeFiche);
-
-    // Retrouver les fiches par statut (en cours, validée, etc.)
     List<FicheQualite> findByStatut(String statut);
 }
