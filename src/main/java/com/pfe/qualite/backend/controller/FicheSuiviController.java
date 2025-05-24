@@ -4,6 +4,7 @@ import com.pfe.qualite.backend.model.FicheQualite;
 import com.pfe.qualite.backend.model.FicheSuivi;
 import com.pfe.qualite.backend.repository.FicheQualiteRepository;
 import com.pfe.qualite.backend.repository.FicheSuiviRepository;
+import com.pfe.qualite.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,28 +25,32 @@ public class FicheSuiviController {
     @Autowired
     private FicheQualiteRepository ficheQualiteRepository;
 
-    // 🔹 GET toutes les fiches de suivi
+    @Autowired
+    private NotificationService notificationService;
+
+    // 🔹 GET : toutes les fiches de suivi
     @GetMapping
     public List<FicheSuivi> getAll() {
         return ficheSuiviRepository.findAll();
     }
 
-    // 🔹 GET suivi par ID
+    // 🔹 GET : par ID
     @GetMapping("/{id}")
     public FicheSuivi getById(@PathVariable String id) {
         return ficheSuiviRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Suivi non trouvé"));
     }
 
-    // 🔹 GET par fiche projet (ficheId)
+    // 🔹 GET : par ID de fiche qualité
     @GetMapping("/fiche/{ficheId}")
     public List<FicheSuivi> getByFicheId(@PathVariable String ficheId) {
         return ficheSuiviRepository.findByFicheId(ficheId);
     }
 
+    // 🔹 POST : créer une fiche de suivi
     @PostMapping
     public ResponseEntity<?> create(@RequestBody FicheSuivi ficheSuivi) {
-        // Vérifier si la fiche qualité associée existe
+        // Vérification : la fiche qualité liée existe-t-elle ?
         Optional<FicheQualite> ficheQualite = ficheQualiteRepository.findById(ficheSuivi.getFicheId());
 
         if (ficheQualite.isEmpty()) {
@@ -54,11 +59,18 @@ public class FicheSuiviController {
                     .body("Erreur : la fiche qualité avec l'ID " + ficheSuivi.getFicheId() + " n'existe pas.");
         }
 
-        // Si elle existe, enregistrer la fiche de suivi
         FicheSuivi saved = ficheSuiviRepository.save(ficheSuivi);
+
+        // 🔔 Notification automatique
+        notificationService.creerNotification(
+                "Nouvelle fiche de suivi ajoutée",
+                ficheSuivi.getAjoutePar(),     // ID utilisateur
+                "FICHE_SUIVI",
+                saved.getId()
+        );
+
         return ResponseEntity.ok(saved);
     }
-
 
     // 🔹 PUT : modifier une fiche de suivi
     @PutMapping("/{id}")

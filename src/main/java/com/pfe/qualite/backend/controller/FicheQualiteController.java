@@ -2,6 +2,7 @@ package com.pfe.qualite.backend.controller;
 
 import com.pfe.qualite.backend.model.FicheQualite;
 import com.pfe.qualite.backend.repository.FicheQualiteRepository;
+import com.pfe.qualite.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,9 @@ public class FicheQualiteController {
 
     @Autowired
     private FicheQualiteRepository ficheRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     // 🔹 GET all
     @GetMapping
@@ -34,7 +38,17 @@ public class FicheQualiteController {
     public FicheQualite create(@RequestBody FicheQualite fiche) {
         fiche.setDateCreation(new Date());
         fiche.setDateDerniereModification(new Date());
-        return ficheRepository.save(fiche);
+        FicheQualite saved = ficheRepository.save(fiche);
+
+        // 🛎️ Notification automatique
+        notificationService.creerNotification(
+                "Nouvelle fiche qualité ajoutée",
+                fiche.getCreePar(),
+                "FICHE_QUALITE",
+                saved.getId()
+        );
+
+        return saved;
     }
 
     // 🔹 PUT : modifier une fiche
@@ -48,7 +62,17 @@ public class FicheQualiteController {
             fiche.setResponsable(updated.getResponsable());
             fiche.setCommentaire(updated.getCommentaire());
             fiche.setDateDerniereModification(new Date());
-            return ficheRepository.save(fiche);
+            FicheQualite updatedFiche = ficheRepository.save(fiche);
+
+            // 🛎️ Notification automatique
+            notificationService.creerNotification(
+                    "Fiche qualité mise à jour",
+                    fiche.getCreePar(), // c’est l’auteur initial
+                    "FICHE_QUALITE",
+                    fiche.getId()
+            );
+
+            return updatedFiche;
         }).orElseThrow(() -> new RuntimeException("Fiche non trouvée"));
     }
 
