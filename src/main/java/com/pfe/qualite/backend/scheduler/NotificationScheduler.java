@@ -26,7 +26,7 @@ public class NotificationScheduler {
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
 
-    @Scheduled(fixedRate = 60000) // chaque 60 secondes
+    @Scheduled(fixedRate = 100000000) // chaque 60 secondes
     public void envoyerEmailsNotifications() {
         log.info("⏰ Planificateur exécuté...");
 
