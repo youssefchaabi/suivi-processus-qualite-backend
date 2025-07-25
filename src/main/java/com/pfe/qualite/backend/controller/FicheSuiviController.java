@@ -81,6 +81,7 @@ public class FicheSuiviController {
             fsuivi.setDecisions(updated.getDecisions());
             fsuivi.setIndicateursKpi(updated.getIndicateursKpi());
             fsuivi.setAjoutePar(updated.getAjoutePar());
+            fsuivi.setDateSuivi(updated.getDateSuivi());
             return ficheSuiviRepository.save(fsuivi);
         }).orElseThrow(() -> new RuntimeException("Suivi non trouvé"));
     }
