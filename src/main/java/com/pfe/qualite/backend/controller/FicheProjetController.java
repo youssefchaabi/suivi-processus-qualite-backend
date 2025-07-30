@@ -5,7 +5,6 @@ import com.pfe.qualite.backend.service.FicheProjetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
@@ -29,13 +28,11 @@ public class FicheProjetController {
 
     @PostMapping
     public FicheProjet create(@RequestBody FicheProjet ficheProjet) {
-        ficheProjet.setDateCreation(new Date());
-        ficheProjet.setDateDerniereModification(new Date());
         // Correction robuste : convertir seulement si c'est une chaîne
         Object echeance = ficheProjet.getEcheance();
         if (echeance != null && echeance.getClass() == String.class) {
             try {
-                ficheProjet.setEcheance(Date.from(Instant.parse((String) echeance)));
+                ficheProjet.setEcheance(java.util.Date.from(Instant.parse((String) echeance)));
             } catch (DateTimeParseException e) {
                 throw new RuntimeException("Format de date d'échéance invalide. Utilisez le format ISO (yyyy-MM-dd ou yyyy-MM-ddTHH:mm:ssZ)");
             }
@@ -45,12 +42,11 @@ public class FicheProjetController {
 
     @PutMapping("/{id}")
     public FicheProjet update(@PathVariable String id, @RequestBody FicheProjet updated) {
-        updated.setDateDerniereModification(new Date());
         // Correction robuste : convertir seulement si c'est une chaîne
         Object echeance = updated.getEcheance();
         if (echeance != null && echeance.getClass() == String.class) {
             try {
-                updated.setEcheance(Date.from(Instant.parse((String) echeance)));
+                updated.setEcheance(java.util.Date.from(Instant.parse((String) echeance)));
             } catch (DateTimeParseException e) {
                 throw new RuntimeException("Format de date d'échéance invalide. Utilisez le format ISO (yyyy-MM-dd ou yyyy-MM-ddTHH:mm:ssZ)");
             }

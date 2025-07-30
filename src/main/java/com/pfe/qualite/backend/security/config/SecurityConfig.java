@@ -37,10 +37,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Config CORS personnalisée ici
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/auth/**").permitAll()
                         // Lecture (GET) autorisée à tous les rôles sur tous les modules
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
+                                                   .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
+                           .requestMatchers("/api/ai-analytics/**").hasRole("PILOTE_QUALITE")
                         // CRUD Nomenclatures réservé à l'ADMIN
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/nomenclatures", "/api/nomenclatures/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/nomenclatures/**").hasRole("ADMIN")
@@ -88,4 +89,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-    

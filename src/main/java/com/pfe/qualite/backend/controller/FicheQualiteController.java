@@ -6,7 +6,6 @@ import com.pfe.qualite.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -36,14 +35,12 @@ public class FicheQualiteController {
     // 🔹 POST : créer une fiche
     @PostMapping
     public FicheQualite create(@RequestBody FicheQualite fiche) {
-        fiche.setDateCreation(new Date());
-        fiche.setDateDerniereModification(new Date());
         FicheQualite saved = ficheRepository.save(fiche);
 
         // 🛎️ Notification automatique
         notificationService.creerNotification(
                 "Nouvelle fiche qualité ajoutée",
-                fiche.getCreePar(),
+                fiche.getResponsable(),
                 "FICHE_QUALITE",
                 saved.getId()
         );
@@ -61,13 +58,12 @@ public class FicheQualiteController {
             fiche.setStatut(updated.getStatut());
             fiche.setResponsable(updated.getResponsable());
             fiche.setCommentaire(updated.getCommentaire());
-            fiche.setDateDerniereModification(new Date());
             FicheQualite updatedFiche = ficheRepository.save(fiche);
 
             // 🛎️ Notification automatique
             notificationService.creerNotification(
                     "Fiche qualité mise à jour",
-                    fiche.getCreePar(), // c’est l’auteur initial
+                    fiche.getResponsable(),
                     "FICHE_QUALITE",
                     fiche.getId()
             );

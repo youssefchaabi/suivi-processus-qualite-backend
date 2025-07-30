@@ -33,7 +33,6 @@ public class FicheProjetService {
             fp.setResponsable(updated.getResponsable());
             fp.setEcheance(updated.getEcheance());
             fp.setStatut(updated.getStatut());
-            fp.setDateDerniereModification(updated.getDateDerniereModification());
             return ficheProjetRepository.save(fp);
         }).orElseThrow(() -> new RuntimeException("Fiche projet non trouvée"));
     }

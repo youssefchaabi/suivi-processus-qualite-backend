@@ -14,9 +14,6 @@ public class FicheProjet {
     private String responsable;
     private Date echeance;
     private String statut;
-    private Date dateCreation;
-    private Date dateDerniereModification;
-    private String creePar;
 
     // Getters et setters
     public String getId() { return id; }
@@ -33,10 +30,4 @@ public class FicheProjet {
     public void setEcheance(Date echeance) { this.echeance = echeance; }
     public String getStatut() { return statut; }
     public void setStatut(String statut) { this.statut = statut; }
-    public Date getDateCreation() { return dateCreation; }
-    public void setDateCreation(Date dateCreation) { this.dateCreation = dateCreation; }
-    public Date getDateDerniereModification() { return dateDerniereModification; }
-    public void setDateDerniereModification(Date dateDerniereModification) { this.dateDerniereModification = dateDerniereModification; }
-    public String getCreePar() { return creePar; }
-    public void setCreePar(String creePar) { this.creePar = creePar; }
 } 

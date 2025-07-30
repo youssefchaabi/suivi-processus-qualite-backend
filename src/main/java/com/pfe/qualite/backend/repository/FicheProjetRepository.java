@@ -6,5 +6,4 @@ import java.util.List;
 
 public interface FicheProjetRepository extends MongoRepository<FicheProjet, String> {
     List<FicheProjet> findByResponsable(String responsable);
-    List<FicheProjet> findByCreePar(String creePar);
 } 
