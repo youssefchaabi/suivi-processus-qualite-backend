@@ -22,5 +22,7 @@ public class FicheSuivi {
     private String problemes;
     private String decisions;
     private String indicateursKpi;
+    private Double tauxConformite;
+    private Double delaiTraitementJours;
     private String ajoutePar;
 }

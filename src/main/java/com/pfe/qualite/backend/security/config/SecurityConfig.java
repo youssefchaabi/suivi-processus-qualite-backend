@@ -42,6 +42,10 @@ public class SecurityConfig {
                         // Lecture (GET) autorisée à tous les rôles sur tous les modules
                                                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
                            .requestMatchers("/api/ai-analytics/**").hasRole("PILOTE_QUALITE")
+                        .requestMatchers("/api/ai-charts/**").hasRole("PILOTE_QUALITE")
+                        .requestMatchers("/api/historique/**").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
+                        .requestMatchers("/api/formulaires-obligatoires/**").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
+                        .requestMatchers("/api/rapports-kpi/**").hasRole("PILOTE_QUALITE")
                         // CRUD Nomenclatures réservé à l'ADMIN
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/nomenclatures", "/api/nomenclatures/**").hasRole("ADMIN")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/nomenclatures/**").hasRole("ADMIN")
