@@ -106,6 +106,71 @@ public class HistoriqueService {
         return historiqueRepository.countByEntite(entite);
     }
 
+    // ===== Ajouts pour filtres avancés et stats globales =====
+    public List<HistoriqueAction> getAll() {
+        return historiqueRepository.findAll();
+    }
+
+    public long countAll() {
+        return historiqueRepository.count();
+    }
+
+    public long countBetween(Date start, Date end) {
+        return historiqueRepository.findByDateActionBetweenOrderByDateActionDesc(start, end).size();
+    }
+
+    public List<HistoriqueAction> getHistoriqueFiltres(com.pfe.qualite.backend.controller.HistoriqueController.FiltresHistoriqueRequest f) {
+        Date start = f.dateDebut;
+        Date end = f.dateFin;
+        if (f.periode != null && (start == null || end == null)) {
+            java.time.LocalDate today = java.time.LocalDate.now();
+            switch (f.periode) {
+                case "TODAY": {
+                    start = java.util.Date.from(today.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    end = java.util.Date.from(today.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    break;
+                }
+                case "WEEK": {
+                    java.time.LocalDate sow = today.minusDays(today.getDayOfWeek().getValue() - 1);
+                    start = java.util.Date.from(sow.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    end = java.util.Date.from(sow.plusDays(7).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    break;
+                }
+                case "MONTH": {
+                    java.time.LocalDate som = today.withDayOfMonth(1);
+                    start = java.util.Date.from(som.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    end = java.util.Date.from(som.plusMonths(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    break;
+                }
+                case "QUARTER": {
+                    int currentQuarter = (today.getMonthValue() - 1) / 3;
+                    java.time.LocalDate soq = java.time.LocalDate.of(today.getYear(), currentQuarter * 3 + 1, 1);
+                    start = java.util.Date.from(soq.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    end = java.util.Date.from(soq.plusMonths(3).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    break;
+                }
+                case "YEAR": {
+                    java.time.LocalDate soy = java.time.LocalDate.of(today.getYear(), 1, 1);
+                    start = java.util.Date.from(soy.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    end = java.util.Date.from(soy.plusYears(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        List<HistoriqueAction> base = (start != null && end != null)
+                ? historiqueRepository.findByDateActionBetweenOrderByDateActionDesc(start, end)
+                : historiqueRepository.findAll();
+
+        return base.stream()
+                .filter(a -> f.typeAction == null || f.typeAction.equalsIgnoreCase(a.getAction()))
+                .filter(a -> f.module == null || f.module.equalsIgnoreCase(a.getEntite()))
+                .filter(a -> f.utilisateurId == null || f.utilisateurId.equals(a.getUtilisateurId()))
+                .toList();
+    }
+
     /**
      * Récupère le nom d'un utilisateur
      */

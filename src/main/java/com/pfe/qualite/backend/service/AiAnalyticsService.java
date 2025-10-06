@@ -24,261 +24,420 @@ public class AiAnalyticsService {
     @Autowired
     private FicheProjetRepository ficheProjetRepository;
 
-    // Analyse prédictive des risques
-    public Map<String, Object> analyserRisques() {
-        Map<String, Object> result = new HashMap<>();
+    // Interface pour les prédictions de risques
+    public static class PredictionRisque {
+        private String niveau;
+        private double probabilite;
+        private String description;
+        private List<String> recommandations;
+        private String impact;
+
+        public PredictionRisque(String niveau, double probabilite, String description, List<String> recommandations, String impact) {
+            this.niveau = niveau;
+            this.probabilite = probabilite;
+            this.description = description;
+            this.recommandations = recommandations;
+            this.impact = impact;
+        }
+
+        // Getters
+        public String getNiveau() { return niveau; }
+        public double getProbabilite() { return probabilite; }
+        public String getDescription() { return description; }
+        public List<String> getRecommandations() { return recommandations; }
+        public String getImpact() { return impact; }
+    }
+
+    // Interface pour les recommandations IA
+    public static class RecommandationIA {
+        private String type;
+        private String titre;
+        private String description;
+        private int priorite;
+        private List<String> actions;
+        private String impactAttendu;
+        private String delaiEstime;
+
+        public RecommandationIA(String type, String titre, String description, int priorite, List<String> actions, String impactAttendu, String delaiEstime) {
+            this.type = type;
+            this.titre = titre;
+            this.description = description;
+            this.priorite = priorite;
+            this.actions = actions;
+            this.impactAttendu = impactAttendu;
+            this.delaiEstime = delaiEstime;
+        }
+
+        // Getters
+        public String getType() { return type; }
+        public String getTitre() { return titre; }
+        public String getDescription() { return description; }
+        public int getPriorite() { return priorite; }
+        public List<String> getActions() { return actions; }
+        public String getImpactAttendu() { return impactAttendu; }
+        public String getDelaiEstime() { return delaiEstime; }
+    }
+
+    // Interface pour les analyses de tendances
+    public static class AnalyseTendance {
+        private String periode;
+        private String tendance;
+        private double valeur;
+        private double variation;
+        private String explication;
+
+        public AnalyseTendance(String periode, String tendance, double valeur, double variation, String explication) {
+            this.periode = periode;
+            this.tendance = tendance;
+            this.valeur = valeur;
+            this.variation = variation;
+            this.explication = explication;
+        }
+
+        // Getters
+        public String getPeriode() { return periode; }
+        public String getTendance() { return tendance; }
+        public double getValeur() { return valeur; }
+        public double getVariation() { return variation; }
+        public String getExplication() { return explication; }
+    }
+
+    // Interface pour les optimisations de processus
+    public static class OptimisationProcessus {
+        private String processus;
+        private double efficaciteActuelle;
+        private double efficaciteOptimale;
+        private List<String> gainsPotentiels;
+        private List<String> actionsOptimisation;
+        private String delaiImplementation;
+
+        public OptimisationProcessus(String processus, double efficaciteActuelle, double efficaciteOptimale, List<String> gainsPotentiels, List<String> actionsOptimisation, String delaiImplementation) {
+            this.processus = processus;
+            this.efficaciteActuelle = efficaciteActuelle;
+            this.efficaciteOptimale = efficaciteOptimale;
+            this.gainsPotentiels = gainsPotentiels;
+            this.actionsOptimisation = actionsOptimisation;
+            this.delaiImplementation = delaiImplementation;
+        }
+
+        // Getters
+        public String getProcessus() { return processus; }
+        public double getEfficaciteActuelle() { return efficaciteActuelle; }
+        public double getEfficaciteOptimale() { return efficaciteOptimale; }
+        public List<String> getGainsPotentiels() { return gainsPotentiels; }
+        public List<String> getActionsOptimisation() { return actionsOptimisation; }
+        public String getDelaiImplementation() { return delaiImplementation; }
+    }
+
+    // Analyser les risques
+    public List<PredictionRisque> analyserRisques() {
+        List<PredictionRisque> predictions = new ArrayList<>();
         List<FicheQualite> fichesQualite = ficheQualiteRepository.findAll();
         List<FicheSuivi> fichesSuivi = ficheSuiviRepository.findAll();
 
-        List<Map<String, Object>> predictions = new ArrayList<>();
+        if (fichesQualite.isEmpty()) {
+            return predictions;
+        }
 
-        // Analyse du taux de conformité
-        long fichesTerminees = fichesQualite.stream()
-                .filter(f -> "TERMINE".equals(f.getStatut()))
-                .count();
-        double tauxConformite = fichesQualite.isEmpty() ? 0 : (double) fichesTerminees / fichesQualite.size() * 100;
+        // Calculer le taux de conformité
+        long fichesTerminees = fichesQualite.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+        double tauxConformite = (double) fichesTerminees / fichesQualite.size() * 100;
 
+        // Prédiction basée sur le taux de conformité
         if (tauxConformite < 70) {
-            Map<String, Object> prediction = new HashMap<>();
-            prediction.put("niveau", "CRITIQUE");
-            prediction.put("probabilite", 0.85);
-            prediction.put("description", "Taux de conformité très faible détecté");
-            prediction.put("recommandations", Arrays.asList(
-                "Réviser les processus qualité",
-                "Former les équipes aux bonnes pratiques",
-                "Mettre en place un suivi renforcé"
+            predictions.add(new PredictionRisque(
+                "CRITIQUE",
+                0.85,
+                "Taux de conformité très faible détecté",
+                Arrays.asList(
+                    "Réviser les processus qualité",
+                    "Former les équipes aux bonnes pratiques",
+                    "Mettre en place un suivi renforcé"
+                ),
+                "Impact majeur sur la réputation et la conformité"
             ));
-            prediction.put("impact", "Impact majeur sur la réputation et la conformité");
-            predictions.add(prediction);
         } else if (tauxConformite < 85) {
-            Map<String, Object> prediction = new HashMap<>();
-            prediction.put("niveau", "ÉLEVÉ");
-            prediction.put("probabilite", 0.65);
-            prediction.put("description", "Taux de conformité en dessous des objectifs");
-            prediction.put("recommandations", Arrays.asList(
-                "Identifier les causes de non-conformité",
-                "Renforcer les contrôles qualité",
-                "Améliorer la communication"
+            predictions.add(new PredictionRisque(
+                "ÉLEVÉ",
+                0.65,
+                "Taux de conformité en dessous des objectifs",
+                Arrays.asList(
+                    "Identifier les causes de non-conformité",
+                    "Renforcer les contrôles qualité",
+                    "Améliorer la communication"
+                ),
+                "Impact modéré sur l'efficacité"
             ));
-            prediction.put("impact", "Impact modéré sur l'efficacité");
-            predictions.add(prediction);
         }
 
-        // Analyse des fiches en retard
-        long fichesEnRetard = fichesQualite.stream()
-                .filter(f -> "EN_COURS".equals(f.getStatut()))
-                .count();
+        // Analyser les fiches en retard
+        long fichesEnRetard = fichesQualite.stream().filter(f -> "EN_COURS".equals(f.getStatut())).count();
         if (fichesEnRetard > fichesQualite.size() * 0.3) {
-            Map<String, Object> prediction = new HashMap<>();
-            prediction.put("niveau", "ÉLEVÉ");
-            prediction.put("probabilite", 0.75);
-            prediction.put("description", "Trop de fiches en cours de traitement");
-            prediction.put("recommandations", Arrays.asList(
-                "Prioriser les fiches urgentes",
-                "Allouer plus de ressources",
-                "Optimiser les processus de traitement"
+            predictions.add(new PredictionRisque(
+                "ÉLEVÉ",
+                0.75,
+                "Trop de fiches en cours de traitement",
+                Arrays.asList(
+                    "Prioriser les fiches urgentes",
+                    "Allouer plus de ressources",
+                    "Optimiser les processus de traitement"
+                ),
+                "Risque de retard généralisé"
             ));
-            prediction.put("impact", "Risque de retard généralisé");
-            predictions.add(prediction);
         }
 
-        result.put("predictions", predictions);
-        result.put("tauxConformite", tauxConformite);
-        result.put("fichesEnRetard", fichesEnRetard);
+        // Analyser les types de fiches problématiques
+        Map<String, Long> typesProblematiques = analyserTypesProblematiques(fichesQualite);
+        if (!typesProblematiques.isEmpty()) {
+            predictions.add(new PredictionRisque(
+                "MOYEN",
+                0.55,
+                "Types de fiches avec taux d'échec élevé détectés",
+                Arrays.asList(
+                    "Analyser les causes spécifiques",
+                    "Former les équipes sur ces types",
+                    "Créer des templates spécialisés"
+                ),
+                "Impact sur l'efficacité globale"
+            ));
+        }
 
-        return result;
+        return predictions;
     }
 
-    // Génération de recommandations intelligentes
-    public Map<String, Object> genererRecommandations() {
-        Map<String, Object> result = new HashMap<>();
+    // Générer des recommandations IA
+    public List<RecommandationIA> genererRecommandations() {
+        List<RecommandationIA> recommandations = new ArrayList<>();
         List<FicheQualite> fichesQualite = ficheQualiteRepository.findAll();
         List<FicheSuivi> fichesSuivi = ficheSuiviRepository.findAll();
         List<FicheProjet> fichesProjet = ficheProjetRepository.findAll();
 
-        List<Map<String, Object>> recommandations = new ArrayList<>();
+        if (fichesQualite.isEmpty()) {
+            return recommandations;
+        }
 
-        // Analyse des métriques
+        // Calculer les métriques
         long totalFiches = fichesQualite.size();
-        long fichesTerminees = fichesQualite.stream()
-                .filter(f -> "TERMINE".equals(f.getStatut()))
-                .count();
-        double tauxConformite = totalFiches > 0 ? (double) fichesTerminees / totalFiches * 100 : 0;
+        long fichesTerminees = fichesQualite.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+        double tauxConformite = (double) fichesTerminees / totalFiches * 100;
 
         // Recommandations basées sur le taux de conformité
         if (tauxConformite < 70) {
-            Map<String, Object> recommandation = new HashMap<>();
-            recommandation.put("type", "URGENT");
-            recommandation.put("titre", "Amélioration critique du taux de conformité");
-            recommandation.put("description", "Le taux de conformité est très faible et nécessite une action immédiate");
-            recommandation.put("priorite", 1);
-            recommandation.put("actions", Arrays.asList(
-                "Audit complet des processus qualité",
-                "Formation intensive des équipes",
-                "Mise en place de contrôles renforcés",
-                "Révision des procédures"
+            recommandations.add(new RecommandationIA(
+                "URGENT",
+                "Amélioration critique du taux de conformité",
+                "Le taux de conformité est très faible et nécessite une action immédiate",
+                1,
+                Arrays.asList(
+                    "Audit complet des processus qualité",
+                    "Formation intensive des équipes",
+                    "Mise en place de contrôles renforcés",
+                    "Révision des procédures"
+                ),
+                "Amélioration de 20-30% du taux de conformité",
+                "2-3 semaines"
             ));
-            recommandation.put("impactAttendu", "Amélioration de 20-30% du taux de conformité");
-            recommandation.put("delaiEstime", "2-3 semaines");
-            recommandations.add(recommandation);
         }
 
         // Recommandations basées sur les fiches de suivi
         if (fichesSuivi.isEmpty()) {
-            Map<String, Object> recommandation = new HashMap<>();
-            recommandation.put("type", "IMPORTANT");
-            recommandation.put("titre", "Mise en place du suivi qualité");
-            recommandation.put("description", "Aucune fiche de suivi n'existe, essentiel pour le contrôle qualité");
-            recommandation.put("priorite", 2);
-            recommandation.put("actions", Arrays.asList(
-                "Créer des fiches de suivi pour toutes les fiches qualité",
-                "Former les équipes au suivi qualité",
-                "Établir des points de contrôle réguliers"
+            recommandations.add(new RecommandationIA(
+                "IMPORTANT",
+                "Mise en place du suivi qualité",
+                "Aucune fiche de suivi n'existe, essentiel pour le contrôle qualité",
+                2,
+                Arrays.asList(
+                    "Créer des fiches de suivi pour toutes les fiches qualité",
+                    "Former les équipes au suivi qualité",
+                    "Établir des points de contrôle réguliers"
+                ),
+                "Amélioration du contrôle et de la traçabilité",
+                "1-2 semaines"
             ));
-            recommandation.put("impactAttendu", "Amélioration du contrôle et de la traçabilité");
-            recommandation.put("delaiEstime", "1-2 semaines");
-            recommandations.add(recommandation);
         }
 
         // Recommandations d'optimisation
         if (totalFiches > 10) {
-            Map<String, Object> recommandation = new HashMap<>();
-            recommandation.put("type", "SUGGESTION");
-            recommandation.put("titre", "Optimisation des processus qualité");
-            recommandation.put("description", "Opportunité d'améliorer l'efficacité des processus");
-            recommandation.put("priorite", 3);
-            recommandation.put("actions", Arrays.asList(
-                "Automatiser les tâches répétitives",
-                "Standardiser les procédures",
-                "Mettre en place des indicateurs de performance"
+            recommandations.add(new RecommandationIA(
+                "SUGGESTION",
+                "Optimisation des processus qualité",
+                "Opportunité d'améliorer l'efficacité des processus",
+                3,
+                Arrays.asList(
+                    "Automatiser les tâches répétitives",
+                    "Standardiser les procédures",
+                    "Mettre en place des indicateurs de performance"
+                ),
+                "Réduction de 15-25% du temps de traitement",
+                "3-4 semaines"
             ));
-            recommandation.put("impactAttendu", "Réduction de 15-25% du temps de traitement");
-            recommandation.put("delaiEstime", "3-4 semaines");
-            recommandations.add(recommandation);
         }
 
-        result.put("recommandations", recommandations);
-        result.put("totalFiches", totalFiches);
-        result.put("tauxConformite", tauxConformite);
+        // Recommandations basées sur les projets
+        if (!fichesProjet.isEmpty()) {
+            long projetsEnCours = fichesProjet.stream().filter(p -> "EN_COURS".equals(p.getStatut())).count();
+            if (projetsEnCours > fichesProjet.size() * 0.5) {
+                recommandations.add(new RecommandationIA(
+                    "IMPORTANT",
+                    "Gestion de la charge de travail",
+                    "Trop de projets en cours simultanément",
+                    2,
+                    Arrays.asList(
+                        "Prioriser les projets critiques",
+                        "Répartir la charge de travail",
+                        "Allouer des ressources supplémentaires"
+                    ),
+                    "Amélioration de la qualité de livraison",
+                    "1 semaine"
+                ));
+            }
+        }
 
-        return result;
+        return recommandations.stream()
+            .sorted(Comparator.comparing(RecommandationIA::getPriorite))
+            .collect(Collectors.toList());
     }
 
-    // Analyse des tendances
-    public Map<String, Object> analyserTendances() {
-        Map<String, Object> result = new HashMap<>();
+    // Analyser les tendances
+    public List<AnalyseTendance> analyserTendances() {
+        List<AnalyseTendance> tendances = new ArrayList<>();
         List<FicheQualite> fichesQualite = ficheQualiteRepository.findAll();
 
-        List<Map<String, Object>> tendances = new ArrayList<>();
+        if (fichesQualite.isEmpty()) {
+            return tendances;
+        }
 
-        // Simulation d'analyse de tendances
+        // Calculer les métriques
         long totalFiches = fichesQualite.size();
-        long fichesTerminees = fichesQualite.stream()
-                .filter(f -> "TERMINE".equals(f.getStatut()))
-                .count();
-        double tauxConformite = totalFiches > 0 ? (double) fichesTerminees / totalFiches * 100 : 0;
+        long fichesTerminees = fichesQualite.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+        double tauxConformite = (double) fichesTerminees / totalFiches * 100;
 
         // Tendance du taux de conformité
-        Map<String, Object> tendance = new HashMap<>();
-        tendance.put("periode", "Ce mois");
         if (tauxConformite > 85) {
-            tendance.put("tendance", "HAUSSE");
-            tendance.put("variation", 5.2);
-            tendance.put("explication", "Amélioration continue des processus qualité");
+            tendances.add(new AnalyseTendance(
+                "Ce mois",
+                "HAUSSE",
+                tauxConformite,
+                5.2,
+                "Amélioration continue des processus qualité"
+            ));
         } else if (tauxConformite < 70) {
-            tendance.put("tendance", "BAISSE");
-            tendance.put("variation", -8.5);
-            tendance.put("explication", "Dégradation des performances qualité");
+            tendances.add(new AnalyseTendance(
+                "Ce mois",
+                "BAISSE",
+                tauxConformite,
+                -8.5,
+                "Dégradation des performances qualité"
+            ));
         } else {
-            tendance.put("tendance", "STABLE");
-            tendance.put("variation", 0.3);
-            tendance.put("explication", "Performance stable mais amélioration possible");
+            tendances.add(new AnalyseTendance(
+                "Ce mois",
+                "STABLE",
+                tauxConformite,
+                0.3,
+                "Performance stable mais amélioration possible"
+            ));
         }
-        tendance.put("valeur", tauxConformite);
-        tendances.add(tendance);
 
         // Tendance du volume de travail
         if (totalFiches > 20) {
-            Map<String, Object> tendanceVolume = new HashMap<>();
-            tendanceVolume.put("periode", "Ce mois");
-            tendanceVolume.put("tendance", "HAUSSE");
-            tendanceVolume.put("valeur", totalFiches);
-            tendanceVolume.put("variation", 15.0);
-            tendanceVolume.put("explication", "Augmentation de l'activité qualité");
-            tendances.add(tendanceVolume);
+            tendances.add(new AnalyseTendance(
+                "Ce mois",
+                "HAUSSE",
+                totalFiches,
+                15.0,
+                "Augmentation de l'activité qualité"
+            ));
         }
 
-        result.put("tendances", tendances);
-        result.put("totalFiches", totalFiches);
-        result.put("tauxConformite", tauxConformite);
-
-        return result;
+        return tendances;
     }
 
-    // Optimisation des processus
-    public Map<String, Object> optimiserProcessus() {
-        Map<String, Object> result = new HashMap<>();
+    // Optimiser les processus
+    public List<OptimisationProcessus> optimiserProcessus() {
+        List<OptimisationProcessus> optimisations = new ArrayList<>();
         List<FicheQualite> fichesQualite = ficheQualiteRepository.findAll();
         List<FicheSuivi> fichesSuivi = ficheSuiviRepository.findAll();
 
-        List<Map<String, Object>> optimisations = new ArrayList<>();
+        if (fichesQualite.isEmpty()) {
+            return optimisations;
+        }
 
-        // Analyse de l'efficacité des processus
+        // Calculer l'efficacité
         long totalFiches = fichesQualite.size();
-        long fichesTerminees = fichesQualite.stream()
-                .filter(f -> "TERMINE".equals(f.getStatut()))
-                .count();
-        double efficaciteActuelle = totalFiches > 0 ? (double) fichesTerminees / totalFiches * 100 : 0;
+        long fichesTerminees = fichesQualite.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+        double efficaciteActuelle = (double) fichesTerminees / totalFiches * 100;
 
         // Optimisation du processus de validation
-        Map<String, Object> optimisation = new HashMap<>();
-        optimisation.put("processus", "Validation des fiches qualité");
-        optimisation.put("efficaciteActuelle", efficaciteActuelle);
-        optimisation.put("efficaciteOptimale", 95.0);
-        optimisation.put("gainsPotentiels", Arrays.asList(
-            "Réduction de 30% du temps de validation",
-            "Amélioration de 25% de la précision",
-            "Réduction de 40% des erreurs"
+        optimisations.add(new OptimisationProcessus(
+            "Validation des fiches qualité",
+            efficaciteActuelle,
+            95.0,
+            Arrays.asList(
+                "Réduction de 30% du temps de validation",
+                "Amélioration de 25% de la précision",
+                "Réduction de 40% des erreurs"
+            ),
+            Arrays.asList(
+                "Automatiser les contrôles de base",
+                "Standardiser les critères de validation",
+                "Former les validateurs aux nouvelles procédures",
+                "Mettre en place un système de validation en cascade"
+            ),
+            "4-6 semaines"
         ));
-        optimisation.put("actionsOptimisation", Arrays.asList(
-            "Automatiser les contrôles de base",
-            "Standardiser les critères de validation",
-            "Former les validateurs aux nouvelles procédures",
-            "Mettre en place un système de validation en cascade"
-        ));
-        optimisation.put("delaiImplementation", "4-6 semaines");
-        optimisations.add(optimisation);
 
         // Optimisation du suivi qualité
         if (!fichesSuivi.isEmpty()) {
-            Map<String, Object> optimisationSuivi = new HashMap<>();
-            optimisationSuivi.put("processus", "Suivi qualité");
-            optimisationSuivi.put("efficaciteActuelle", 75.0);
-            optimisationSuivi.put("efficaciteOptimale", 90.0);
-            optimisationSuivi.put("gainsPotentiels", Arrays.asList(
-                "Amélioration de 20% de la traçabilité",
-                "Réduction de 35% du temps de suivi",
-                "Amélioration de 30% de la réactivité"
+            optimisations.add(new OptimisationProcessus(
+                "Suivi qualité",
+                75.0,
+                90.0,
+                Arrays.asList(
+                    "Amélioration de 20% de la traçabilité",
+                    "Réduction de 35% du temps de suivi",
+                    "Amélioration de 30% de la réactivité"
+                ),
+                Arrays.asList(
+                    "Mettre en place des alertes automatiques",
+                    "Créer des tableaux de bord temps réel",
+                    "Automatiser les rapports de suivi",
+                    "Former les pilotes qualité aux nouveaux outils"
+                ),
+                "3-4 semaines"
             ));
-            optimisationSuivi.put("actionsOptimisation", Arrays.asList(
-                "Mettre en place des alertes automatiques",
-                "Créer des tableaux de bord temps réel",
-                "Automatiser les rapports de suivi",
-                "Former les pilotes qualité aux nouveaux outils"
-            ));
-            optimisationSuivi.put("delaiImplementation", "3-4 semaines");
-            optimisations.add(optimisationSuivi);
         }
 
-        result.put("optimisations", optimisations);
-        result.put("efficaciteActuelle", efficaciteActuelle);
-
-        return result;
+        return optimisations;
     }
 
-    // Génération de rapports IA
+    // Méthodes utilitaires
+    private Map<String, Long> analyserTypesProblematiques(List<FicheQualite> fichesQualite) {
+        Map<String, Long> typesProblematiques = new HashMap<>();
+        
+        // Grouper par type et calculer le taux de réussite
+        Map<String, List<FicheQualite>> fichesParType = fichesQualite.stream()
+            .collect(Collectors.groupingBy(f -> f.getTypeFiche() != null ? f.getTypeFiche() : "Non défini"));
+
+        for (Map.Entry<String, List<FicheQualite>> entry : fichesParType.entrySet()) {
+            String type = entry.getKey();
+            List<FicheQualite> fiches = entry.getValue();
+            
+            long fichesTerminees = fiches.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+            double tauxReussite = (double) fichesTerminees / fiches.size() * 100;
+            
+            if (tauxReussite < 60) {
+                typesProblematiques.put(type, (long) fiches.size());
+            }
+        }
+        
+        return typesProblematiques;
+    }
+
+    // Générer un rapport IA complet
     public Map<String, Object> genererRapportIA() {
         Map<String, Object> rapport = new HashMap<>();
+        
         List<FicheQualite> fichesQualite = ficheQualiteRepository.findAll();
         List<FicheSuivi> fichesSuivi = ficheSuiviRepository.findAll();
         List<FicheProjet> fichesProjet = ficheProjetRepository.findAll();
@@ -289,28 +448,32 @@ public class AiAnalyticsService {
         resume.put("totalSuivis", fichesSuivi.size());
         resume.put("totalProjets", fichesProjet.size());
         
-        long fichesTerminees = fichesQualite.stream()
-                .filter(f -> "TERMINE".equals(f.getStatut()))
-                .count();
-        double tauxConformite = fichesQualite.isEmpty() ? 0 : (double) fichesTerminees / fichesQualite.size() * 100;
-        resume.put("tauxConformite", tauxConformite);
-
-        rapport.put("dateGeneration", new Date());
+        if (!fichesQualite.isEmpty()) {
+            long fichesTerminees = fichesQualite.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+            double tauxConformite = (double) fichesTerminees / fichesQualite.size() * 100;
+            resume.put("tauxConformite", tauxConformite);
+        } else {
+            resume.put("tauxConformite", 0.0);
+        }
+        
         rapport.put("resume", resume);
         rapport.put("alertes", genererAlertes(fichesQualite, fichesSuivi));
         rapport.put("predictions", genererPredictions(fichesQualite));
         rapport.put("recommandations", genererRecommandationsRapides(fichesQualite, fichesSuivi));
-
+        rapport.put("dateGeneration", new Date());
+        
         return rapport;
     }
 
     private List<Map<String, Object>> genererAlertes(List<FicheQualite> fichesQualite, List<FicheSuivi> fichesSuivi) {
         List<Map<String, Object>> alertes = new ArrayList<>();
         
-        long fichesTerminees = fichesQualite.stream()
-                .filter(f -> "TERMINE".equals(f.getStatut()))
-                .count();
-        double tauxConformite = fichesQualite.isEmpty() ? 0 : (double) fichesTerminees / fichesQualite.size() * 100;
+        if (fichesQualite.isEmpty()) {
+            return alertes;
+        }
+
+        long fichesTerminees = fichesQualite.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+        double tauxConformite = (double) fichesTerminees / fichesQualite.size() * 100;
         
         if (tauxConformite < 70) {
             Map<String, Object> alerte = new HashMap<>();
@@ -320,9 +483,7 @@ public class AiAnalyticsService {
             alertes.add(alerte);
         }
 
-        long fichesEnRetard = fichesQualite.stream()
-                .filter(f -> "EN_COURS".equals(f.getStatut()))
-                .count();
+        long fichesEnRetard = fichesQualite.stream().filter(f -> "EN_COURS".equals(f.getStatut())).count();
         if (fichesEnRetard > fichesQualite.size() * 0.3) {
             Map<String, Object> alerte = new HashMap<>();
             alerte.put("niveau", "ATTENTION");
@@ -337,10 +498,12 @@ public class AiAnalyticsService {
     private List<Map<String, Object>> genererPredictions(List<FicheQualite> fichesQualite) {
         List<Map<String, Object>> predictions = new ArrayList<>();
         
-        long fichesTerminees = fichesQualite.stream()
-                .filter(f -> "TERMINE".equals(f.getStatut()))
-                .count();
-        double tauxConformite = fichesQualite.isEmpty() ? 0 : (double) fichesTerminees / fichesQualite.size() * 100;
+        if (fichesQualite.isEmpty()) {
+            return predictions;
+        }
+
+        long fichesTerminees = fichesQualite.stream().filter(f -> "TERMINE".equals(f.getStatut())).count();
+        double tauxConformite = (double) fichesTerminees / fichesQualite.size() * 100;
         
         if (tauxConformite < 80) {
             Map<String, Object> prediction = new HashMap<>();
@@ -358,22 +521,20 @@ public class AiAnalyticsService {
         List<Map<String, Object>> recommandations = new ArrayList<>();
         
         if (fichesSuivi.isEmpty()) {
-            Map<String, Object> recommandation = new HashMap<>();
-            recommandation.put("priorite", "HAUTE");
-            recommandation.put("action", "Créer des fiches de suivi");
-            recommandation.put("raison", "Aucune fiche de suivi n'existe");
-            recommandations.add(recommandation);
+            Map<String, Object> rec = new HashMap<>();
+            rec.put("priorite", "HAUTE");
+            rec.put("action", "Créer des fiches de suivi");
+            rec.put("raison", "Aucune fiche de suivi n'existe");
+            recommandations.add(rec);
         }
 
-        long fichesEnCours = fichesQualite.stream()
-                .filter(f -> "EN_COURS".equals(f.getStatut()))
-                .count();
+        long fichesEnCours = fichesQualite.stream().filter(f -> "EN_COURS".equals(f.getStatut())).count();
         if (fichesEnCours > 5) {
-            Map<String, Object> recommandation = new HashMap<>();
-            recommandation.put("priorite", "MOYENNE");
-            recommandation.put("action", "Prioriser les fiches en cours");
-            recommandation.put("raison", fichesEnCours + " fiches en cours nécessitent un suivi");
-            recommandations.add(recommandation);
+            Map<String, Object> rec = new HashMap<>();
+            rec.put("priorite", "MOYENNE");
+            rec.put("action", "Prioriser les fiches en cours");
+            rec.put("raison", fichesEnCours + " fiches en cours nécessitent un suivi");
+            recommandations.add(rec);
         }
 
         return recommandations;
