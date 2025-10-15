@@ -74,10 +74,15 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/projets").hasAnyRole("ADMIN", "CHEF_PROJET")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/projets/**").hasAnyRole("ADMIN", "CHEF_PROJET")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/projets/**").hasAnyRole("ADMIN", "CHEF_PROJET")
-                        // CRUD Notifications : ADMIN uniquement (création/suppression), lecture à tous
+                        // Notifications :
+                        // - POST /relancer (relance email) : ADMIN, CHEF_PROJET, PILOTE_QUALITE
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/notifications/relancer").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
+                        // - POST (création système) : ADMIN
+                        // - PUT (marquer lue) : ADMIN, CHEF_PROJET, PILOTE_QUALITE
+                        // - DELETE (suppression) : ADMIN, CHEF_PROJET, PILOTE_QUALITE (vérification propriétaire côté contrôleur)
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/notifications", "/api/notifications/**").hasRole("ADMIN")
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/notifications/**").hasRole("ADMIN")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/notifications/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/notifications/**").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/notifications/**").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
                         // Catch-all : ADMIN a tous les droits
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

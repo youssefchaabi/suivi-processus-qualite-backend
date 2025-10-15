@@ -35,7 +35,7 @@ public class NotificationScheduler {
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
 
-    @Scheduled(fixedRate = 100000000) // chaque 60 secondes
+    @Scheduled(cron = "0 */15 * * * *") // toutes les 15 minutes
     public void envoyerEmailsNotifications() {
         log.info("⏰ Planificateur exécuté...");
 
@@ -97,7 +97,7 @@ public class NotificationScheduler {
     /**
      * Vérifier les formulaires obligatoires en retard (toutes les heures)
      */
-    @Scheduled(fixedRate = 3600000) // 1 heure
+    @Scheduled(cron = "0 0 * * * *") // toutes les heures
     public void verifierFormulairesEnRetard() {
         log.info("⏰ Vérification des formulaires en retard...");
         
@@ -136,7 +136,7 @@ public class NotificationScheduler {
     /**
      * Vérifier les échéances proches (toutes les 6 heures)
      */
-    @Scheduled(fixedRate = 21600000) // 6 heures
+    @Scheduled(cron = "0 0 */6 * * *") // toutes les 6 heures
     public void verifierEcheancesProches() {
         log.info("⏰ Vérification des échéances proches...");
         

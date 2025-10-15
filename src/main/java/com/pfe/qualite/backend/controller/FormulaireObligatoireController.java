@@ -2,10 +2,12 @@ package com.pfe.qualite.backend.controller;
 
 import com.pfe.qualite.backend.model.FormulaireObligatoire;
 import com.pfe.qualite.backend.service.FormulaireObligatoireService;
+import com.pfe.qualite.backend.service.HistoriqueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -16,12 +18,24 @@ public class FormulaireObligatoireController {
     @Autowired
     private FormulaireObligatoireService formulaireService;
 
+    @Autowired
+    private HistoriqueService historiqueService;
+
     /**
      * Créer un nouveau formulaire obligatoire
      */
     @PostMapping
-    public ResponseEntity<FormulaireObligatoire> creerFormulaireObligatoire(@RequestBody FormulaireObligatoire formulaire) {
+    public ResponseEntity<FormulaireObligatoire> creerFormulaireObligatoire(@RequestBody FormulaireObligatoire formulaire, HttpServletRequest request) {
         FormulaireObligatoire saved = formulaireService.creerFormulaireObligatoire(formulaire);
+        // Historique: création formulaire obligatoire
+        historiqueService.enregistrerAction(
+                "CREATION",
+                "FORMULAIRE_OBLIGATOIRE",
+                saved.getId(),
+                saved.getResponsableId(),
+                "Création du formulaire obligatoire pour le projet: " + saved.getProjetId(),
+                request
+        );
         return ResponseEntity.ok(saved);
     }
 
@@ -92,8 +106,17 @@ public class FormulaireObligatoireController {
      * Marquer un formulaire comme soumis
      */
     @PutMapping("/{id}/soumis")
-    public ResponseEntity<FormulaireObligatoire> marquerCommeSoumis(@PathVariable String id) {
+    public ResponseEntity<FormulaireObligatoire> marquerCommeSoumis(@PathVariable String id, HttpServletRequest request) {
         FormulaireObligatoire formulaire = formulaireService.marquerCommeSoumis(id);
+        // Historique
+        historiqueService.enregistrerAction(
+                "MODIFICATION",
+                "FORMULAIRE_OBLIGATOIRE",
+                formulaire.getId(),
+                formulaire.getResponsableId(),
+                "Marqué comme soumis",
+                request
+        );
         return ResponseEntity.ok(formulaire);
     }
 
@@ -101,8 +124,17 @@ public class FormulaireObligatoireController {
      * Marquer un formulaire comme en retard
      */
     @PutMapping("/{id}/retard")
-    public ResponseEntity<FormulaireObligatoire> marquerCommeEnRetard(@PathVariable String id) {
+    public ResponseEntity<FormulaireObligatoire> marquerCommeEnRetard(@PathVariable String id, HttpServletRequest request) {
         FormulaireObligatoire formulaire = formulaireService.marquerCommeEnRetard(id);
+        // Historique
+        historiqueService.enregistrerAction(
+                "MODIFICATION",
+                "FORMULAIRE_OBLIGATOIRE",
+                formulaire.getId(),
+                formulaire.getResponsableId(),
+                "Marqué comme en retard",
+                request
+        );
         return ResponseEntity.ok(formulaire);
     }
 
@@ -112,8 +144,18 @@ public class FormulaireObligatoireController {
     @PutMapping("/{id}")
     public ResponseEntity<FormulaireObligatoire> updateFormulaireObligatoire(
             @PathVariable String id, 
-            @RequestBody FormulaireObligatoire updated) {
+            @RequestBody FormulaireObligatoire updated,
+            HttpServletRequest request) {
         FormulaireObligatoire formulaire = formulaireService.updateFormulaireObligatoire(id, updated);
+        // Historique
+        historiqueService.enregistrerAction(
+                "MODIFICATION",
+                "FORMULAIRE_OBLIGATOIRE",
+                formulaire.getId(),
+                formulaire.getResponsableId(),
+                "Mise à jour du formulaire obligatoire",
+                request
+        );
         return ResponseEntity.ok(formulaire);
     }
 
@@ -121,7 +163,19 @@ public class FormulaireObligatoireController {
      * Supprimer un formulaire obligatoire
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFormulaireObligatoire(@PathVariable String id) {
+    public ResponseEntity<Void> deleteFormulaireObligatoire(@PathVariable String id, HttpServletRequest request) {
+        // Historique avant suppression si trouvé
+        formulaireService.getAllFormulairesObligatoires().stream()
+                .filter(f -> id.equals(f.getId()))
+                .findFirst()
+                .ifPresent(f -> historiqueService.enregistrerAction(
+                        "SUPPRESSION",
+                        "FORMULAIRE_OBLIGATOIRE",
+                        f.getId(),
+                        f.getResponsableId(),
+                        "Suppression du formulaire obligatoire",
+                        request
+                ));
         formulaireService.deleteFormulaireObligatoire(id);
         return ResponseEntity.ok().build();
     }

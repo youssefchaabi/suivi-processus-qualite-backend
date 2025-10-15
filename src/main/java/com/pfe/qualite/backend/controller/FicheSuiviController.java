@@ -5,6 +5,8 @@ import com.pfe.qualite.backend.model.FicheSuivi;
 import com.pfe.qualite.backend.repository.FicheQualiteRepository;
 import com.pfe.qualite.backend.repository.FicheSuiviRepository;
 import com.pfe.qualite.backend.service.NotificationService;
+import com.pfe.qualite.backend.service.MailService;
+import com.pfe.qualite.backend.repository.UtilisateurRepository;
 import com.pfe.qualite.backend.service.HistoriqueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,12 @@ public class FicheSuiviController {
 
     @Autowired
     private HistoriqueService historiqueService;
+
+    @Autowired
+    private MailService mailService;
+
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
 
     // 🔹 GET : toutes les fiches de suivi
     @GetMapping
@@ -73,6 +81,21 @@ public class FicheSuiviController {
                 "FICHE_SUIVI",
                 saved.getId()
         );
+
+        // ✉️ Email automatique à l'auteur si email disponible
+        try {
+            if (ficheSuivi.getAjoutePar() != null) {
+                var userOpt = utilisateurRepository.findById(ficheSuivi.getAjoutePar());
+                if (userOpt.isPresent() && userOpt.get().getEmail() != null && !userOpt.get().getEmail().isBlank()) {
+                    String email = userOpt.get().getEmail();
+                    String subject = "Nouvelle fiche de suivi";
+                    String body = "Une nouvelle fiche de suivi a été ajoutée (ID: " + saved.getId() + ")";
+                    mailService.sendEmail(email, subject, body);
+                }
+            }
+        } catch (Exception e) {
+            // on ne bloque pas la création si l'email échoue
+        }
 
         // 📝 Enregistrer dans l'historique
         historiqueService.enregistrerAction(
