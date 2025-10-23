@@ -133,7 +133,6 @@ public class AiAnalyticsService {
     public List<PredictionRisque> analyserRisques() {
         List<PredictionRisque> predictions = new ArrayList<>();
         List<FicheQualite> fichesQualite = ficheQualiteRepository.findAll();
-        List<FicheSuivi> fichesSuivi = ficheSuiviRepository.findAll();
 
         if (fichesQualite.isEmpty()) {
             return predictions;

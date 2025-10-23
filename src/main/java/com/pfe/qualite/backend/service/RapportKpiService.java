@@ -9,12 +9,15 @@ import com.pfe.qualite.backend.repository.FicheSuiviRepository;
 import com.pfe.qualite.backend.repository.FicheProjetRepository;
 import com.pfe.qualite.backend.repository.FormulaireObligatoireRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import java.util.*;
 import java.text.SimpleDateFormat;
+import java.util.*;
 
-@Service
+/**
+ * Service désactivé temporairement - Sprint 2
+ * Les modèles FicheQualite, FicheSuivi, FicheProjet seront créés au Sprint 2
+ */
+// @Service  // Désactivé temporairement
 public class RapportKpiService {
 
     @Autowired
@@ -28,8 +31,6 @@ public class RapportKpiService {
 
     @Autowired
     private FormulaireObligatoireRepository formulaireObligatoireRepository;
-
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
     /**
      * Générer un rapport KPI complet
@@ -311,7 +312,6 @@ public class RapportKpiService {
     private Map<String, Object> getMetriquesPerformance() {
         Map<String, Object> metriques = new HashMap<>();
         
-        List<FicheQualite> fichesQualite = ficheQualiteRepository.findAll();
         List<FormulaireObligatoire> formulaires = formulaireObligatoireRepository.findAll();
         List<FicheSuivi> fichesSuivi = ficheSuiviRepository.findAll();
         

@@ -18,7 +18,9 @@ public class AdminController {
 
     @PostMapping("/create-user")
     public ResponseEntity<Utilisateur> creer(@RequestBody Utilisateur u) {
-        Utilisateur created = utilisateurService.creerUtilisateur(u.getEmail(), u.getNom(), u.getRole(), u.getPassword());
+        // Utiliser la nouvelle signature avec l'objet Utilisateur complet
+        Utilisateur created = utilisateurService.creerUtilisateur(u, "ADMIN");
+        created.setPassword(null); // Ne pas retourner le mot de passe
         return ResponseEntity.ok(created);
     }
 }

@@ -1,6 +1,5 @@
 package com.pfe.qualite.backend.security.auth;
 
-import com.pfe.qualite.backend.security.auth.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

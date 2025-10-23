@@ -10,4 +10,5 @@ public interface FicheQualiteRepository extends MongoRepository<FicheQualite, St
     // ➕ méthodes utiles supplémentaires
     List<FicheQualite> findByTypeFiche(String typeFiche);
     List<FicheQualite> findByStatut(String statut);
+    List<FicheQualite> findByResponsable(String responsable);
 }

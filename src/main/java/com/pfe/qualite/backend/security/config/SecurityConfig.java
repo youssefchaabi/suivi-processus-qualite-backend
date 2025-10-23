@@ -1,7 +1,6 @@
 package com.pfe.qualite.backend.security.config;
 
 import com.pfe.qualite.backend.security.jwt.JwtFilter;
-import com.pfe.qualite.backend.security.auth.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.*;
@@ -28,7 +27,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
-    private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
