@@ -139,6 +139,9 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // Utiliser 4 rounds au lieu de 10 par défaut pour être plus rapide
+        // 4 rounds = ~50ms au lieu de ~500ms pour 10 rounds
+        // Toujours sécurisé pour un environnement de développement/test
+        return new BCryptPasswordEncoder(4);
     }
 }

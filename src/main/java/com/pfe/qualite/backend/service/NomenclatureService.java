@@ -58,7 +58,8 @@ public class NomenclatureService {
         // Vérifier si la nomenclature existe déjà
         List<Nomenclature> existing = nomenclatureRepository.findByType(nomenclature.getType());
         boolean alreadyExists = existing.stream()
-            .anyMatch(n -> n.getCode().equalsIgnoreCase(nomenclature.getCode()));
+            .anyMatch(n -> n.getCode() != null && nomenclature.getCode() != null && 
+                          n.getCode().equalsIgnoreCase(nomenclature.getCode()));
         
         if (alreadyExists) {
             throw new IllegalArgumentException(
@@ -82,10 +83,28 @@ public class NomenclatureService {
      * Met à jour une nomenclature existante
      */
     public Nomenclature updateNomenclature(String id, Nomenclature nomenclatureUpdated) {
-        log.info("Mise à jour de la nomenclature ID: {}", id);
+        log.info("=== SERVICE: Mise à jour nomenclature ID: {} ===", id);
+        log.info("Données reçues: type={}, code={}, libelle={}, actif={}", 
+            nomenclatureUpdated.getType(), 
+            nomenclatureUpdated.getCode(), 
+            nomenclatureUpdated.getLibelle(), 
+            nomenclatureUpdated.getActif());
         
-        Nomenclature existingNomenclature = nomenclatureRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Nomenclature non trouvée avec l'ID: " + id));
+        // Vérifier si l'ID existe
+        log.info("Recherche nomenclature avec ID: {}", id);
+        Optional<Nomenclature> optionalNomenclature = nomenclatureRepository.findById(id);
+        
+        if (!optionalNomenclature.isPresent()) {
+            log.error("ERREUR: Nomenclature ID={} NON TROUVÉE dans la base de données", id);
+            log.error("IDs disponibles dans la base:");
+            nomenclatureRepository.findAll().forEach(n -> 
+                log.error("  - ID: {}, Type: {}, Code: {}", n.getId(), n.getType(), n.getCode())
+            );
+            throw new RuntimeException("Nomenclature non trouvée avec l'ID: " + id);
+        }
+        
+        Nomenclature existingNomenclature = optionalNomenclature.get();
+        log.info("Nomenclature trouvée: type={}, code={}", existingNomenclature.getType(), existingNomenclature.getCode());
         
         // Validation métier
         validateNomenclature(nomenclatureUpdated);
@@ -94,9 +113,11 @@ public class NomenclatureService {
         List<Nomenclature> existing = nomenclatureRepository.findByType(nomenclatureUpdated.getType());
         boolean duplicateExists = existing.stream()
             .filter(n -> !n.getId().equals(id))
-            .anyMatch(n -> n.getCode().equalsIgnoreCase(nomenclatureUpdated.getCode()));
+            .anyMatch(n -> n.getCode() != null && nomenclatureUpdated.getCode() != null && 
+                          n.getCode().equalsIgnoreCase(nomenclatureUpdated.getCode()));
         
         if (duplicateExists) {
+            log.error("ERREUR: Doublon détecté pour type={}, code={}", nomenclatureUpdated.getType(), nomenclatureUpdated.getCode());
             throw new IllegalArgumentException(
                 "Une autre nomenclature avec le type '" + nomenclatureUpdated.getType() + 
                 "' et le code '" + nomenclatureUpdated.getCode() + "' existe déjà"
@@ -104,6 +125,7 @@ public class NomenclatureService {
         }
         
         // Mise à jour des champs
+        log.info("Mise à jour des champs...");
         existingNomenclature.setType(nomenclatureUpdated.getType());
         existingNomenclature.setCode(nomenclatureUpdated.getCode());
         existingNomenclature.setLibelle(nomenclatureUpdated.getLibelle());
@@ -113,7 +135,7 @@ public class NomenclatureService {
         existingNomenclature.setDateModification(java.time.LocalDateTime.now());
         
         Nomenclature savedNomenclature = nomenclatureRepository.save(existingNomenclature);
-        log.info("Nomenclature mise à jour avec succès, ID: {}", savedNomenclature.getId());
+        log.info("=== Nomenclature mise à jour avec succès, ID: {} ===", savedNomenclature.getId());
         return savedNomenclature;
     }
 

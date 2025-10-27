@@ -47,41 +47,56 @@ public class UtilisateurService {
      * Créer un nouvel utilisateur (Admin uniquement)
      */
     public Utilisateur creerUtilisateur(Utilisateur utilisateur, String adminId) {
-        log.info("Création d'un nouvel utilisateur: {}", utilisateur.getEmail());
+        long startTime = System.currentTimeMillis();
+        log.info("=== DÉBUT CRÉATION UTILISATEUR: {} ===", utilisateur.getEmail());
         
         // Vérifier si l'email existe déjà
         if (utilisateurRepository.findByEmail(utilisateur.getEmail()).isPresent()) {
             throw new RuntimeException("Un utilisateur avec cet email existe déjà");
         }
+        log.info("Vérification email OK - {}ms", System.currentTimeMillis() - startTime);
 
         // Générer un mot de passe temporaire si non fourni
         String motDePasseTemporaire = utilisateur.getPassword();
         if (motDePasseTemporaire == null || motDePasseTemporaire.isEmpty()) {
             motDePasseTemporaire = genererMotDePasseTemporaire();
         }
+        log.info("Génération mot de passe OK - {}ms", System.currentTimeMillis() - startTime);
 
-        // Encoder le mot de passe
+        // Encoder le mot de passe (BCRYPT - peut être lent)
+        log.info("Début encodage bcrypt...");
+        long bcryptStart = System.currentTimeMillis();
         utilisateur.setPassword(passwordEncoder.encode(motDePasseTemporaire));
+        log.info("Encodage bcrypt terminé en {}ms", System.currentTimeMillis() - bcryptStart);
         
         // Définir les valeurs par défaut
         utilisateur.setActif(true);
         utilisateur.setDateCreation(LocalDateTime.now());
         utilisateur.setCreePar(adminId);
 
+        log.info("Sauvegarde en base...");
+        long saveStart = System.currentTimeMillis();
         Utilisateur saved = utilisateurRepository.save(utilisateur);
+        log.info("Sauvegarde OK en {}ms", System.currentTimeMillis() - saveStart);
 
-        // Envoyer notification email avec mot de passe temporaire
-        try {
-            notificationService.envoyerEmailBienvenue(
-                saved.getEmail(),
-                saved.getNom(),
-                motDePasseTemporaire
-            );
-        } catch (Exception e) {
-            log.error("Erreur lors de l'envoi de l'email de bienvenue", e);
-        }
+        // Envoyer notification email ASYNCHRONE (ne pas bloquer)
+        final String finalMotDePasse = motDePasseTemporaire;
+        final String finalEmail = saved.getEmail();
+        final String finalNom = saved.getNom();
+        
+        // Exécution asynchrone de l'email
+        new Thread(() -> {
+            try {
+                log.info("Envoi email asynchrone à {}", finalEmail);
+                notificationService.envoyerEmailBienvenue(finalEmail, finalNom, finalMotDePasse);
+                log.info("Email envoyé avec succès");
+            } catch (Exception e) {
+                log.error("Erreur lors de l'envoi de l'email de bienvenue (non bloquant)", e);
+            }
+        }).start();
 
-        log.info("Utilisateur créé avec succès: {}", saved.getId());
+        long totalTime = System.currentTimeMillis() - startTime;
+        log.info("=== UTILISATEUR CRÉÉ EN {}ms - ID: {} ===", totalTime, saved.getId());
         return saved;
     }
 

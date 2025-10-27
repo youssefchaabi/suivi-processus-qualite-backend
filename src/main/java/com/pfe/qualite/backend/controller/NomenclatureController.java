@@ -12,7 +12,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contrôleur REST pour la gestion des nomenclatures (ADMIN uniquement)
@@ -71,29 +73,47 @@ public class NomenclatureController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Nomenclature> create(
+    public ResponseEntity<?> create(
             @RequestBody Nomenclature nomenclature,
             HttpServletRequest request) {
         try {
-            log.info("POST /api/nomenclatures - Création nomenclature: {} - {}", 
-                nomenclature.getType(), nomenclature.getCode());
+            log.info("=== POST /api/nomenclatures ===");
+            log.info("Données reçues: type={}, code={}, libelle={}, actif={}", 
+                nomenclature.getType(), 
+                nomenclature.getCode(), 
+                nomenclature.getLibelle(), 
+                nomenclature.getActif());
             
             Nomenclature savedNomenclature = nomenclatureService.createNomenclature(nomenclature);
             
-            // Historique
-            historiqueService.enregistrerAction(
-                    "CREATION",
-                    "NOMENCLATURE",
-                    savedNomenclature.getId(),
-                    jwtUtil.extractUserIdFromRequest(request),
-                    "Création nomenclature: " + savedNomenclature.getType() + " - " + savedNomenclature.getLibelle(),
-                    request
-            );
+            log.info("Nomenclature créée avec succès: ID={}", savedNomenclature.getId());
+            
+            // Historique (ne doit pas bloquer la création)
+            try {
+                historiqueService.enregistrerAction(
+                        "CREATION",
+                        "NOMENCLATURE",
+                        savedNomenclature.getId(),
+                        jwtUtil.extractUserIdFromRequest(request),
+                        "Création nomenclature: " + savedNomenclature.getType() + " - " + savedNomenclature.getLibelle(),
+                        request
+                );
+            } catch (Exception histEx) {
+                log.warn("Impossible d'enregistrer l'historique: {}", histEx.getMessage());
+            }
             
             return ResponseEntity.status(HttpStatus.CREATED).body(savedNomenclature);
         } catch (IllegalArgumentException e) {
-            log.error("Erreur validation nomenclature", e);
-            return ResponseEntity.badRequest().build();
+            log.error("ERREUR VALIDATION: {}", e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            log.error("ERREUR INATTENDUE lors de la création: {}", e.getMessage(), e);
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Erreur serveur: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
@@ -102,32 +122,50 @@ public class NomenclatureController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Nomenclature> update(
+    public ResponseEntity<?> update(
             @PathVariable String id,
             @RequestBody Nomenclature updated,
             HttpServletRequest request) {
         try {
-            log.info("PUT /api/nomenclatures/{} - Mise à jour nomenclature", id);
+            log.info("=== PUT /api/nomenclatures/{} ===", id);
+            log.info("Données reçues: type={}, code={}, libelle={}, actif={}", 
+                updated.getType(), updated.getCode(), updated.getLibelle(), updated.getActif());
             
             Nomenclature updatedNomenclature = nomenclatureService.updateNomenclature(id, updated);
             
-            // Historique
-            historiqueService.enregistrerAction(
-                    "MODIFICATION",
-                    "NOMENCLATURE",
-                    updatedNomenclature.getId(),
-                    jwtUtil.extractUserIdFromRequest(request),
-                    "Modification nomenclature: " + updatedNomenclature.getType() + " - " + updatedNomenclature.getLibelle(),
-                    request
-            );
+            log.info("Nomenclature mise à jour avec succès: ID={}", updatedNomenclature.getId());
+            
+            // Historique (ne doit pas bloquer la modification)
+            try {
+                historiqueService.enregistrerAction(
+                        "MODIFICATION",
+                        "NOMENCLATURE",
+                        updatedNomenclature.getId(),
+                        jwtUtil.extractUserIdFromRequest(request),
+                        "Modification nomenclature: " + updatedNomenclature.getType() + " - " + updatedNomenclature.getLibelle(),
+                        request
+                );
+            } catch (Exception histEx) {
+                log.warn("Impossible d'enregistrer l'historique: {}", histEx.getMessage());
+            }
             
             return ResponseEntity.ok(updatedNomenclature);
         } catch (IllegalArgumentException e) {
-            log.error("Erreur validation nomenclature", e);
-            return ResponseEntity.badRequest().build();
+            log.error("ERREUR VALIDATION: {}", e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         } catch (RuntimeException e) {
-            log.error("Nomenclature non trouvée", e);
-            return ResponseEntity.notFound().build();
+            log.error("ERREUR: Nomenclature ID={} NON TROUVÉE: {}", id, e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Nomenclature non trouvée avec l'ID: " + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        } catch (Exception e) {
+            log.error("ERREUR INATTENDUE lors de la modification: {}", e.getMessage(), e);
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Erreur serveur: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
 
