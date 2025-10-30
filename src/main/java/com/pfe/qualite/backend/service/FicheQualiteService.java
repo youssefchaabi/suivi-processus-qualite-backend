@@ -66,28 +66,40 @@ public class FicheQualiteService {
         // Validation métier
         validateFiche(fiche);
         
+        // Définir les métadonnées
+        fiche.setDateCreation(java.time.LocalDateTime.now());
+        fiche.setCreePar(fiche.getResponsable());
+        
         // Sauvegarde
         FicheQualite savedFiche = ficheQualiteRepository.save(fiche);
         
         // Notification
         if (fiche.getResponsable() != null && !fiche.getResponsable().isEmpty()) {
-            notificationService.creerNotification(
-                "Nouvelle fiche qualité créée: " + savedFiche.getTitre(),
-                fiche.getResponsable(),
-                "FICHE_QUALITE",
-                savedFiche.getId()
-            );
+            try {
+                notificationService.creerNotification(
+                    "Nouvelle fiche qualité créée: " + savedFiche.getTitre(),
+                    fiche.getResponsable(),
+                    "FICHE_QUALITE",
+                    savedFiche.getId()
+                );
+            } catch (Exception e) {
+                log.warn("Impossible de créer la notification: {}", e.getMessage());
+            }
         }
         
         // Historique
-        historiqueService.enregistrerAction(
-            "CREATION",
-            "FICHE_QUALITE",
-            savedFiche.getId(),
-            fiche.getResponsable(),
-            "Création de la fiche qualité: " + savedFiche.getTitre(),
-            request
-        );
+        try {
+            historiqueService.enregistrerAction(
+                "CREATION",
+                "FICHE_QUALITE",
+                savedFiche.getId(),
+                fiche.getResponsable(),
+                "Création de la fiche qualité: " + savedFiche.getTitre(),
+                request
+            );
+        } catch (Exception e) {
+            log.warn("Impossible d'enregistrer l'historique: {}", e.getMessage());
+        }
         
         log.info("Fiche qualité créée avec succès, ID: {}", savedFiche.getId());
         return savedFiche;
@@ -110,30 +122,45 @@ public class FicheQualiteService {
         existingFiche.setDescription(ficheUpdated.getDescription());
         existingFiche.setTypeFiche(ficheUpdated.getTypeFiche());
         existingFiche.setStatut(ficheUpdated.getStatut());
+        existingFiche.setCategorie(ficheUpdated.getCategorie());
+        existingFiche.setPriorite(ficheUpdated.getPriorite());
         existingFiche.setResponsable(ficheUpdated.getResponsable());
-        existingFiche.setCommentaire(ficheUpdated.getCommentaire());
+        existingFiche.setDateEcheance(ficheUpdated.getDateEcheance());
+        existingFiche.setObservations(ficheUpdated.getObservations());
+        
+        // Métadonnées
+        existingFiche.setDateModification(java.time.LocalDateTime.now());
+        existingFiche.setModifiePar(ficheUpdated.getResponsable());
         
         FicheQualite savedFiche = ficheQualiteRepository.save(existingFiche);
         
         // Notification
         if (savedFiche.getResponsable() != null && !savedFiche.getResponsable().isEmpty()) {
-            notificationService.creerNotification(
-                "Fiche qualité mise à jour: " + savedFiche.getTitre(),
-                savedFiche.getResponsable(),
-                "FICHE_QUALITE",
-                savedFiche.getId()
-            );
+            try {
+                notificationService.creerNotification(
+                    "Fiche qualité mise à jour: " + savedFiche.getTitre(),
+                    savedFiche.getResponsable(),
+                    "FICHE_QUALITE",
+                    savedFiche.getId()
+                );
+            } catch (Exception e) {
+                log.warn("Impossible de créer la notification: {}", e.getMessage());
+            }
         }
         
         // Historique
-        historiqueService.enregistrerAction(
-            "MODIFICATION",
-            "FICHE_QUALITE",
-            savedFiche.getId(),
-            savedFiche.getResponsable(),
-            "Modification de la fiche qualité: " + savedFiche.getTitre(),
-            request
-        );
+        try {
+            historiqueService.enregistrerAction(
+                "MODIFICATION",
+                "FICHE_QUALITE",
+                savedFiche.getId(),
+                savedFiche.getResponsable(),
+                "Modification de la fiche qualité: " + savedFiche.getTitre(),
+                request
+            );
+        } catch (Exception e) {
+            log.warn("Impossible d'enregistrer l'historique: {}", e.getMessage());
+        }
         
         log.info("Fiche qualité mise à jour avec succès, ID: {}", savedFiche.getId());
         return savedFiche;
@@ -184,16 +211,36 @@ public class FicheQualiteService {
             throw new IllegalArgumentException("Le titre de la fiche est obligatoire");
         }
         
+        if (fiche.getTitre().length() < 3) {
+            throw new IllegalArgumentException("Le titre doit contenir au moins 3 caractères");
+        }
+        
         if (fiche.getTitre().length() > 200) {
             throw new IllegalArgumentException("Le titre ne peut pas dépasser 200 caractères");
         }
         
-        if (fiche.getStatut() != null && !isValidStatut(fiche.getStatut())) {
-            throw new IllegalArgumentException("Statut invalide: " + fiche.getStatut());
+        if (fiche.getDescription() == null || fiche.getDescription().trim().isEmpty()) {
+            throw new IllegalArgumentException("La description est obligatoire");
         }
         
-        if (fiche.getTypeFiche() != null && !isValidTypeFiche(fiche.getTypeFiche())) {
-            throw new IllegalArgumentException("Type de fiche invalide: " + fiche.getTypeFiche());
+        if (fiche.getDescription().length() < 10) {
+            throw new IllegalArgumentException("La description doit contenir au moins 10 caractères");
+        }
+        
+        if (fiche.getTypeFiche() == null || fiche.getTypeFiche().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le type de fiche est obligatoire");
+        }
+        
+        if (fiche.getStatut() == null || fiche.getStatut().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le statut est obligatoire");
+        }
+        
+        if (fiche.getResponsable() == null || fiche.getResponsable().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le responsable est obligatoire");
+        }
+        
+        if (fiche.getDateEcheance() == null) {
+            throw new IllegalArgumentException("La date d'échéance est obligatoire");
         }
     }
 
