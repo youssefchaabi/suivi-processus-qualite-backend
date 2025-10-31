@@ -184,6 +184,28 @@ public class NomenclatureService {
     public void initializeDefaultNomenclatures() {
         log.info("Initialisation des nomenclatures par défaut");
         
+        // NETTOYER LES NOMENCLATURES INVALIDES (code null)
+        try {
+            List<Nomenclature> allNomenclatures = nomenclatureRepository.findAll();
+            long invalidCount = allNomenclatures.stream()
+                .filter(n -> n.getCode() == null || n.getCode().trim().isEmpty())
+                .count();
+            
+            if (invalidCount > 0) {
+                log.warn("⚠️ {} nomenclatures invalides détectées (code null ou vide)", invalidCount);
+                allNomenclatures.stream()
+                    .filter(n -> n.getCode() == null || n.getCode().trim().isEmpty())
+                    .forEach(n -> {
+                        log.warn("Suppression nomenclature invalide: ID={}, Type={}, Libelle={}", 
+                            n.getId(), n.getType(), n.getLibelle());
+                        nomenclatureRepository.deleteById(n.getId());
+                    });
+                log.info("✅ Nomenclatures invalides nettoyées");
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors du nettoyage des nomenclatures invalides", e);
+        }
+        
         // Statuts des fiches
         createIfNotExists("STATUT", "EN_COURS", "En cours");
         createIfNotExists("STATUT", "TERMINEE", "Terminée");
@@ -223,6 +245,7 @@ public class NomenclatureService {
     private void createIfNotExists(String type, String code, String libelle) {
         List<Nomenclature> existing = nomenclatureRepository.findByType(type);
         boolean exists = existing.stream()
+            .filter(n -> n.getCode() != null) // Filtrer les codes null
             .anyMatch(n -> n.getCode().equalsIgnoreCase(code));
         
         if (!exists) {
