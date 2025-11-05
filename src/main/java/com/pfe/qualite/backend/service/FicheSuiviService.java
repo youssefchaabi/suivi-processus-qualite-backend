@@ -234,7 +234,10 @@ public class FicheSuiviService {
      * Vérifie si l'état d'avancement est valide
      */
     private boolean isValidEtatAvancement(String etatAvancement) {
-        return List.of("EN_COURS", "TERMINE", "BLOQUE", "EN_ATTENTE", "VALIDE")
-            .contains(etatAvancement.toUpperCase());
+        // Accepter les libellés français ET les codes
+        return List.of(
+            "EN_COURS", "TERMINE", "BLOQUE", "EN_ATTENTE", "VALIDE",
+            "En cours", "Terminé", "Bloqué", "En attente", "Validé"
+        ).contains(etatAvancement);
     }
 }

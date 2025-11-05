@@ -72,6 +72,10 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/projets").hasAnyRole("ADMIN", "CHEF_PROJET")
                         .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/projets/**").hasAnyRole("ADMIN", "CHEF_PROJET")
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/projets/**").hasAnyRole("ADMIN", "CHEF_PROJET")
+                        // CRUD Tâches : CHEF_PROJET et ADMIN
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/taches").hasAnyRole("ADMIN", "CHEF_PROJET")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/taches/**").hasAnyRole("ADMIN", "CHEF_PROJET")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/taches/**").hasAnyRole("ADMIN", "CHEF_PROJET")
                         // Notifications :
                         // - POST /relancer (relance email) : ADMIN, CHEF_PROJET, PILOTE_QUALITE
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/notifications/relancer").hasAnyRole("ADMIN", "CHEF_PROJET", "PILOTE_QUALITE")
